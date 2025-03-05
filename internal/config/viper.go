@@ -9,7 +9,7 @@ import (
 func NewViper() *viper.Viper {
 	viper := viper.New()
 
-	viper.AddConfigPath("../")
+	viper.AddConfigPath("./")
 	viper.SetConfigName("config")
 	viper.SetConfigType("env")
 	viper.AutomaticEnv()

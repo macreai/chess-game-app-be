@@ -7,7 +7,7 @@ type User struct {
 	Name      string  `gorm:"column:name"`
 	CreatedAt int64   `gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt int64   `gorm:"column:updated_at;autoCreateTime;autoUpdateTime"`
-	Scores    []Score `gorm:"foreignKey:user_id;references:id"`
+	Scores    []Score `gorm:"foreignKey:UserID"`
 }
 
 func (u *User) TableName() string {
