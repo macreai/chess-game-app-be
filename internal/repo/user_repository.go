@@ -31,8 +31,8 @@ func (u *UserRepositoryImpl) GetUser(db *gorm.DB, id uint64) (*entity.User, erro
 	return u.Repository.FindById(db, id)
 }
 
-func (u *UserRepositoryImpl) FindByUsername(db *gorm.DB, username string) (entity.User, int64) {
-	var user entity.User
-	rows := db.Where("username = ?", username).First(&user).RowsAffected
-	return user, rows
+func (u *UserRepositoryImpl) FindByUsername(db *gorm.DB, username string) (*entity.User, error) {
+	var user *entity.User
+	err := db.Where("username = ?", username).First(&user).Error
+	return user, err
 }

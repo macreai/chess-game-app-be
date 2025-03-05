@@ -40,10 +40,11 @@ func (c *UserUseCase) Register(ctx context.Context, request *model.RegisterUserR
 		}
 	}
 
-	_, rows := c.UserRepository.FindByUsername(c.DB, request.Username)
-	if rows > 0 {
-		c.Log.Warnf("User : %+v", rows)
+	_, err = c.UserRepository.FindByUsername(c.DB, request.Username)
+	if err != gorm.ErrRecordNotFound {
+		c.Log.Warnf("User : %+v", err)
 		c.Log.Warnf("User already exists : %+v", err)
+		c.Log.Tracef("Request Username : %v", request.Username)
 		return &model.WebResponse[*model.RegisterUserResponse]{
 			Errors: fiber.NewError(fiber.ErrConflict.Code, fmt.Sprintf("Username already exist!")),
 			Data:   nil,
@@ -76,11 +77,9 @@ func (c *UserUseCase) Register(ctx context.Context, request *model.RegisterUserR
 	return &model.WebResponse[*model.RegisterUserResponse]{
 		Errors: nil,
 		Data: &model.RegisterUserResponse{
-			ID:        user.ID,
-			Username:  user.Username,
-			Name:      user.Name,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
+			ID:       user.ID,
+			Username: user.Username,
+			Name:     user.Name,
 		},
 	}
 
