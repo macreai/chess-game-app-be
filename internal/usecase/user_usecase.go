@@ -1,11 +1,11 @@
 package usecase
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/macreai/chess-game-app-be/internal/auth"
 	"github.com/macreai/chess-game-app-be/internal/entity"
 	"github.com/macreai/chess-game-app-be/internal/model"
 	"github.com/macreai/chess-game-app-be/internal/repo"
@@ -19,18 +19,20 @@ type UserUseCase struct {
 	Log            *logrus.Logger
 	Validate       *validator.Validate
 	UserRepository *repo.UserRepositoryImpl
+	Auth           *auth.MyJWT
 }
 
-func NewUserUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate, userRepository *repo.UserRepositoryImpl) *UserUseCase {
+func NewUserUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate, userRepository *repo.UserRepositoryImpl, auth *auth.MyJWT) *UserUseCase {
 	return &UserUseCase{
 		DB:             db,
 		Log:            logger,
 		Validate:       validate,
 		UserRepository: userRepository,
+		Auth:           auth,
 	}
 }
 
-func (c *UserUseCase) Register(ctx context.Context, request *model.RegisterUserRequest) *model.WebResponse[*model.RegisterUserResponse] {
+func (c *UserUseCase) Register(request *model.RegisterUserRequest) *model.WebResponse[*model.RegisterUserResponse] {
 	err := c.Validate.Struct(request)
 	if err != nil {
 		c.Log.Warnf("Invalid request body: %+v", err)
@@ -42,11 +44,9 @@ func (c *UserUseCase) Register(ctx context.Context, request *model.RegisterUserR
 
 	_, err = c.UserRepository.FindByUsername(c.DB, request.Username)
 	if err != gorm.ErrRecordNotFound {
-		c.Log.Warnf("User : %+v", err)
-		c.Log.Warnf("User already exists : %+v", err)
-		c.Log.Tracef("Request Username : %v", request.Username)
+		c.Log.Warnf("Username already exist! %+v", err)
 		return &model.WebResponse[*model.RegisterUserResponse]{
-			Errors: fiber.NewError(fiber.ErrConflict.Code, fmt.Sprintf("Username already exist!")),
+			Errors: fiber.NewError(fiber.ErrConflict.Code, fmt.Sprintf("Username already exist! %+v", err)),
 			Data:   nil,
 		}
 	}
@@ -83,4 +83,48 @@ func (c *UserUseCase) Register(ctx context.Context, request *model.RegisterUserR
 		},
 	}
 
+}
+
+func (c *UserUseCase) Login(request *model.LoginUserRequest) *model.WebResponse[*model.LoginUserResponse] {
+	err := c.Validate.Struct(request)
+	if err != nil {
+		c.Log.Warnf("Invalid request body: %+v", err)
+		return &model.WebResponse[*model.LoginUserResponse]{
+			Errors: fiber.NewError(fiber.ErrBadRequest.Code, fmt.Sprintf("Invalid request body: %+v", err)),
+			Data:   nil,
+		}
+	}
+
+	user, err := c.UserRepository.FindByUsername(c.DB, request.Usename)
+	if err != nil {
+		c.Log.Warnf("User not found: %+v", err)
+		return &model.WebResponse[*model.LoginUserResponse]{
+			Errors: fiber.NewError(fiber.ErrUnauthorized.Code, fmt.Sprintf("User not found: %+v", err)),
+			Data:   nil,
+		}
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+		return &model.WebResponse[*model.LoginUserResponse]{
+			Errors: fiber.NewError(fiber.ErrUnauthorized.Code, fmt.Sprintf("Invalid credentias: %+v", err)),
+			Data:   nil,
+		}
+	}
+
+	token, err := c.Auth.GenerateJWT(user, c.Auth.Viper)
+
+	if err != nil {
+		c.Log.Warnf("Error generate JWT: %+v", err)
+		return &model.WebResponse[*model.LoginUserResponse]{
+			Errors: fiber.NewError(fiber.ErrInternalServerError.Code, fmt.Sprintf("Error generate JWT: %+v", err)),
+			Data:   nil,
+		}
+	}
+
+	return &model.WebResponse[*model.LoginUserResponse]{
+		Errors: nil,
+		Data: &model.LoginUserResponse{
+			Token: token,
+		},
+	}
 }

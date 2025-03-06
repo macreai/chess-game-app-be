@@ -27,7 +27,20 @@ func (c *UserController) Register(ctx *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
-	response := c.UseCase.Register(ctx.UserContext(), request)
+	response := c.UseCase.Register(request)
+
+	return ctx.JSON(response)
+}
+
+func (c *UserController) Login(ctx *fiber.Ctx) error {
+	request := new(model.LoginUserRequest)
+	err := ctx.BodyParser(request)
+	if err != nil {
+		c.Log.Warnf("Failed to parse request body : %+v", err)
+		return fiber.ErrBadRequest
+	}
+
+	response := c.UseCase.Login(request)
 
 	return ctx.JSON(response)
 }

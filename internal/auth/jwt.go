@@ -5,20 +5,21 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt"
+	"github.com/gofiber/fiber/v2/log"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/macreai/chess-game-app-be/internal/entity"
 	"github.com/macreai/chess-game-app-be/internal/model"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 type MyJWT struct {
-	User  *entity.User
 	Viper *viper.Viper
+	Log   *logrus.Logger
 }
 
-func NewMyJWT(user *entity.User, viper *viper.Viper) *MyJWT {
+func NewMyJWT(viper *viper.Viper) *MyJWT {
 	return &MyJWT{
-		User:  user,
 		Viper: viper,
 	}
 }
@@ -28,14 +29,14 @@ func (myJwt *MyJWT) GenerateJWT(user *entity.User, viper *viper.Viper) (string, 
 	claims := jwt.MapClaims{
 		"user_id":  user.ID,
 		"username": user.Username,
-		"exp":      time.Now().Add(time.Hour * 24).Unix(),
+		"exp":      time.Now().Add(time.Hour * 24 * 30).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(viper.GetString("JWT_SECRET")))
 }
 
-func (myJwt *MyJWT) JWTMiddleware() fiber.Handler {
+func (myJwt *MyJWT) JWTMiddleware(viper *viper.Viper) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
@@ -55,13 +56,11 @@ func (myJwt *MyJWT) JWTMiddleware() fiber.Handler {
 
 		tokenString := parts[1]
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fiber.NewError(fiber.StatusUnauthorized, "Unexpected Signing Method")
-			}
 			return []byte(viper.GetString("JWT_SECRET")), nil
-		})
+		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 
 		if err != nil || !token.Valid {
+			log.Warn("token valdi:", token.Valid)
 			return c.Status(fiber.StatusUnauthorized).JSON(&model.WebResponse[any]{
 				Errors: fiber.NewError(fiber.StatusUnauthorized, "Invalid or Expired JWT"),
 			})

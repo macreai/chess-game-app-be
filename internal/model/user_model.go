@@ -11,3 +11,12 @@ type RegisterUserResponse struct {
 	Username string `json:"username,omitempty"`
 	Name     string `json:"name,omitempty"`
 }
+
+type LoginUserRequest struct {
+	Usename  string `json:"username" validate:"required,max=100"`
+	Password string `json:"password" validate:"required,max=100"`
+}
+
+type LoginUserResponse struct {
+	Token string `json:"token"`
+}

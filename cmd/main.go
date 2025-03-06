@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/macreai/chess-game-app-be/internal/auth"
 	"github.com/macreai/chess-game-app-be/internal/config"
 )
 
@@ -12,6 +13,7 @@ func main() {
 	logConfig := config.NewLogrus(viperConfig)
 	gormConfig := config.NewDatabase(viperConfig, logConfig)
 	validatorConfig := config.NewValidator()
+	authConfig := auth.NewMyJWT(viperConfig)
 
 	config.InitApp(&config.AppConfig{
 		App:       fiberApp,
@@ -19,6 +21,7 @@ func main() {
 		Log:       logConfig,
 		Validator: validatorConfig,
 		Config:    viperConfig,
+		Jwt:       authConfig,
 	})
 
 	webPort := viperConfig.GetInt("WEB_PORT")
