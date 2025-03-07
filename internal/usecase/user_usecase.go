@@ -143,7 +143,7 @@ func (c *UserUseCase) Login(request *model.LoginUserRequest) *model.WebResponse[
 		}
 	}
 
-	c.RedisDB.Set(ctxBackground, fmt.Sprintf("%d", user.ID), token, time.Until(exp))
+	c.RedisDB.Set(ctxBackground, fmt.Sprintf("%d", user.ID), token, time.Until(exp)) // check
 
 	return &model.WebResponse[*model.LoginUserResponse]{
 		Errors: nil,
