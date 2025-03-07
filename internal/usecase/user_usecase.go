@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -144,7 +143,7 @@ func (c *UserUseCase) Login(request *model.LoginUserRequest) *model.WebResponse[
 		}
 	}
 
-	c.RedisDB.Set(ctxBackground, strconv.FormatUint(user.ID, 10), token, time.Until(exp))
+	c.RedisDB.Set(ctxBackground, fmt.Sprintf("%d", user.ID), token, time.Until(exp))
 
 	return &model.WebResponse[*model.LoginUserResponse]{
 		Errors: nil,
