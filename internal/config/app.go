@@ -8,6 +8,7 @@ import (
 	"github.com/macreai/chess-game-app-be/internal/http/route"
 	"github.com/macreai/chess-game-app-be/internal/repo"
 	"github.com/macreai/chess-game-app-be/internal/usecase"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
@@ -20,11 +21,12 @@ type AppConfig struct {
 	Validator *validator.Validate
 	Config    *viper.Viper
 	Jwt       *auth.MyJWT
+	RedisDB   *redis.Client
 }
 
 func InitApp(app *AppConfig) {
 	userRepository := repo.NewUserRepositoryImpl(app.Log)
-	userUsecase := usecase.NewUserUseCase(app.DB, app.Log, app.Validator, userRepository, app.Jwt)
+	userUsecase := usecase.NewUserUseCase(app.DB, app.Log, app.Validator, userRepository, app.Jwt, app.RedisDB)
 	userController := http.NewUserController(app.Log, userUsecase)
 
 	routeConfig := &route.RouteConfig{

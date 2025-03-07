@@ -12,4 +12,6 @@ func NewRedis(viper *viper.Viper) *redis.Client {
 		DB:       viper.GetInt("REDIS_DB"),
 		Protocol: viper.GetInt("REDIS_PROTOCOL"),
 	})
+
+	return redisClient
 }

@@ -8,12 +8,13 @@ import (
 )
 
 func main() {
-	viperConfig := config.NewViper()
+	viperConfig := config.NewViper("./")
 	fiberApp := config.NewFiber(viperConfig)
 	logConfig := config.NewLogrus(viperConfig)
 	gormConfig := config.NewDatabase(viperConfig, logConfig)
 	validatorConfig := config.NewValidator()
 	authConfig := auth.NewMyJWT(viperConfig)
+	redisConfig := config.NewRedis(viperConfig)
 
 	config.InitApp(&config.AppConfig{
 		App:       fiberApp,
@@ -22,6 +23,7 @@ func main() {
 		Validator: validatorConfig,
 		Config:    viperConfig,
 		Jwt:       authConfig,
+		RedisDB:   redisConfig,
 	})
 
 	webPort := viperConfig.GetInt("WEB_PORT")
