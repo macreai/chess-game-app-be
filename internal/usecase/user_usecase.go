@@ -39,6 +39,7 @@ func (c *UserUseCase) Register(request *model.RegisterUserRequest) *model.WebRes
 		return &model.WebResponse[*model.RegisterUserResponse]{
 			Errors: fiber.NewError(fiber.ErrBadRequest.Code, fmt.Sprintf("Invalid request body: %+v", err)),
 			Data:   nil,
+			Status: fiber.StatusBadRequest,
 		}
 	}
 
@@ -48,6 +49,7 @@ func (c *UserUseCase) Register(request *model.RegisterUserRequest) *model.WebRes
 		return &model.WebResponse[*model.RegisterUserResponse]{
 			Errors: fiber.NewError(fiber.ErrConflict.Code, fmt.Sprintf("Username already exist! %+v", err)),
 			Data:   nil,
+			Status: fiber.StatusConflict,
 		}
 	}
 
@@ -57,6 +59,7 @@ func (c *UserUseCase) Register(request *model.RegisterUserRequest) *model.WebRes
 		return &model.WebResponse[*model.RegisterUserResponse]{
 			Errors: fiber.ErrInternalServerError,
 			Data:   nil,
+			Status: fiber.StatusInternalServerError,
 		}
 	}
 
@@ -71,6 +74,7 @@ func (c *UserUseCase) Register(request *model.RegisterUserRequest) *model.WebRes
 		return &model.WebResponse[*model.RegisterUserResponse]{
 			Errors: fiber.ErrInternalServerError,
 			Data:   nil,
+			Status: fiber.StatusInternalServerError,
 		}
 	}
 
@@ -81,6 +85,7 @@ func (c *UserUseCase) Register(request *model.RegisterUserRequest) *model.WebRes
 			Username: user.Username,
 			Name:     user.Name,
 		},
+		Status: fiber.StatusOK,
 	}
 
 }
@@ -92,6 +97,7 @@ func (c *UserUseCase) Login(request *model.LoginUserRequest) *model.WebResponse[
 		return &model.WebResponse[*model.LoginUserResponse]{
 			Errors: fiber.NewError(fiber.ErrBadRequest.Code, fmt.Sprintf("Invalid request body: %+v", err)),
 			Data:   nil,
+			Status: fiber.StatusBadRequest,
 		}
 	}
 
@@ -101,6 +107,7 @@ func (c *UserUseCase) Login(request *model.LoginUserRequest) *model.WebResponse[
 		return &model.WebResponse[*model.LoginUserResponse]{
 			Errors: fiber.NewError(fiber.ErrUnauthorized.Code, fmt.Sprintf("User not found: %+v", err)),
 			Data:   nil,
+			Status: fiber.StatusUnauthorized,
 		}
 	}
 
@@ -108,6 +115,7 @@ func (c *UserUseCase) Login(request *model.LoginUserRequest) *model.WebResponse[
 		return &model.WebResponse[*model.LoginUserResponse]{
 			Errors: fiber.NewError(fiber.ErrUnauthorized.Code, fmt.Sprintf("Invalid credentias: %+v", err)),
 			Data:   nil,
+			Status: fiber.StatusUnauthorized,
 		}
 	}
 
@@ -118,6 +126,7 @@ func (c *UserUseCase) Login(request *model.LoginUserRequest) *model.WebResponse[
 		return &model.WebResponse[*model.LoginUserResponse]{
 			Errors: fiber.NewError(fiber.ErrInternalServerError.Code, fmt.Sprintf("Error generate JWT: %+v", err)),
 			Data:   nil,
+			Status: fiber.StatusUnauthorized,
 		}
 	}
 
@@ -126,5 +135,6 @@ func (c *UserUseCase) Login(request *model.LoginUserRequest) *model.WebResponse[
 		Data: &model.LoginUserResponse{
 			Token: token,
 		},
+		Status: fiber.StatusOK,
 	}
 }
