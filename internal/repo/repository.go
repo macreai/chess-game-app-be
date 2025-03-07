@@ -2,9 +2,7 @@ package repo
 
 import "gorm.io/gorm"
 
-type Repository[T any] struct {
-	db *gorm.DB
-}
+type Repository[T any] struct{}
 
 func (r *Repository[T]) Create(db *gorm.DB, entity *T) error {
 	return db.Create(entity).Error
