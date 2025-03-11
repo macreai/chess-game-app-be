@@ -6,9 +6,10 @@ import (
 )
 
 type RouteConfig struct {
-	App            *fiber.App
-	UserController *http.UserController
-	AuthMiddleware fiber.Handler
+	App                   *fiber.App
+	UserController        *http.UserController
+	MatchMakingController *http.MatchMakingController
+	AuthMiddleware        fiber.Handler
 }
 
 func (r *RouteConfig) Setup() {
@@ -26,4 +27,5 @@ func (r *RouteConfig) setupAuthRoute() {
 	r.App.Delete("/api/v1/users", func(ctx *fiber.Ctx) error {
 		return ctx.SendString("I am deleted")
 	})
+	r.App.Post("/api/v1/match-making", r.MatchMakingController.StartMatchMaking)
 }

@@ -1,9 +1,7 @@
 package usecase
 
 import (
-	"context"
 	"fmt"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -11,7 +9,6 @@ import (
 	"github.com/macreai/chess-game-app-be/internal/entity"
 	"github.com/macreai/chess-game-app-be/internal/model"
 	"github.com/macreai/chess-game-app-be/internal/repo"
-	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -23,7 +20,6 @@ type UserUseCase struct {
 	Validate       *validator.Validate
 	UserRepository *repo.UserRepositoryImpl
 	Auth           *auth.MyJWT
-	RedisDB        *redis.Client
 }
 
 func NewUserUseCase(
@@ -32,7 +28,6 @@ func NewUserUseCase(
 	validate *validator.Validate,
 	userRepository *repo.UserRepositoryImpl,
 	auth *auth.MyJWT,
-	redisDb *redis.Client,
 ) *UserUseCase {
 	return &UserUseCase{
 		DB:             db,
@@ -40,7 +35,6 @@ func NewUserUseCase(
 		Validate:       validate,
 		UserRepository: userRepository,
 		Auth:           auth,
-		RedisDB:        redisDb,
 	}
 }
 
@@ -103,7 +97,6 @@ func (c *UserUseCase) Register(request *model.RegisterUserRequest) *model.WebRes
 }
 
 func (c *UserUseCase) Login(request *model.LoginUserRequest) *model.WebResponse[*model.LoginUserResponse] {
-	ctxBackground := context.Background()
 	err := c.Validate.Struct(request)
 	if err != nil {
 		c.Log.Warnf("Invalid request body: %+v", err)
@@ -132,7 +125,7 @@ func (c *UserUseCase) Login(request *model.LoginUserRequest) *model.WebResponse[
 		}
 	}
 
-	exp, token, err := c.Auth.GenerateJWT(user, c.Auth.Viper)
+	token, err := c.Auth.GenerateJWT(user, c.Auth.Viper)
 
 	if err != nil {
 		c.Log.Warnf("Error generate JWT: %+v", err)
@@ -142,8 +135,6 @@ func (c *UserUseCase) Login(request *model.LoginUserRequest) *model.WebResponse[
 			Status: fiber.StatusUnauthorized,
 		}
 	}
-
-	c.RedisDB.Set(ctxBackground, fmt.Sprintf("%d", user.ID), token, time.Until(exp)) // check
 
 	return &model.WebResponse[*model.LoginUserResponse]{
 		Errors: nil,

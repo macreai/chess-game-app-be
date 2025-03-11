@@ -22,17 +22,23 @@ type AppConfig struct {
 	Config    *viper.Viper
 	Jwt       *auth.MyJWT
 	RedisDB   *redis.Client
+	Viper     *viper.Viper
 }
 
 func InitApp(app *AppConfig) {
 	userRepository := repo.NewUserRepositoryImpl(app.Log)
-	userUsecase := usecase.NewUserUseCase(app.DB, app.Log, app.Validator, userRepository, app.Jwt, app.RedisDB)
+	userUsecase := usecase.NewUserUseCase(app.DB, app.Log, app.Validator, userRepository, app.Jwt)
 	userController := http.NewUserController(app.Log, userUsecase)
 
+	matchRepository := repo.NewMatchMakingRepositoryImpl(app.Log, app.RedisDB, app.Viper)
+	matchUsecase := usecase.NewMatchMakingUsecase(app.Log, app.Validator, matchRepository)
+	matchController := http.NewMatchMakingController(app.Log, matchUsecase)
+
 	routeConfig := &route.RouteConfig{
-		App:            app.App,
-		UserController: userController,
-		AuthMiddleware: app.Jwt.JWTMiddleware(app.Config),
+		App:                   app.App,
+		UserController:        userController,
+		MatchMakingController: matchController,
+		AuthMiddleware:        app.Jwt.JWTMiddleware(app.Config),
 	}
 	routeConfig.Setup()
 }

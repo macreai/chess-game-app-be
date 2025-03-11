@@ -24,6 +24,7 @@ func main() {
 		Config:    viperConfig,
 		Jwt:       authConfig,
 		RedisDB:   redisConfig,
+		Viper:     viperConfig,
 	})
 
 	webPort := viperConfig.GetInt("WEB_PORT")

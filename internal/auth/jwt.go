@@ -24,19 +24,17 @@ func NewMyJWT(viper *viper.Viper) *MyJWT {
 	}
 }
 
-func (myJwt *MyJWT) GenerateJWT(user *entity.User, viper *viper.Viper) (time.Time, string, error) {
-
-	exp := time.Now().Add(time.Hour * 24)
+func (myJwt *MyJWT) GenerateJWT(user *entity.User, viper *viper.Viper) (string, error) {
 
 	claims := jwt.MapClaims{
 		"user_id":  user.ID,
 		"username": user.Username,
-		"exp":      exp.Unix(),
+		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenSigned, err := token.SignedString([]byte(viper.GetString("JWT_SECRET")))
-	return exp, tokenSigned, err
+	return tokenSigned, err
 }
 
 func (myJwt *MyJWT) JWTMiddleware(viper *viper.Viper) fiber.Handler {
